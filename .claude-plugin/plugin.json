@@ -18,7 +18,6 @@
         "SERPAPI_MONTHLY_BUDGET": "${user_config.serpapi_monthly_budget}",
         "EBAY_CLIENT_ID": "${user_config.ebay_client_id}",
         "EBAY_CLIENT_SECRET": "${user_config.ebay_client_secret}",
-        "BESTBUY_API_KEY": "${user_config.bestbuy_api_key}",
         "TARGET_ENABLED": "${user_config.target_enabled}"
       }
     }
@@ -47,12 +46,6 @@
       "type": "string",
       "title": "eBay client secret",
       "description": "Paired with the client ID; the server fetches and caches its own OAuth token.",
-      "sensitive": true
-    },
-    "bestbuy_api_key": {
-      "type": "string",
-      "title": "Best Buy API key",
-      "description": "Free key from developer.bestbuy.com. Leave blank to skip Best Buy.",
       "sensitive": true
     },
     "target_enabled": {

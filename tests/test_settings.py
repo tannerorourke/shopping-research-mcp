@@ -16,3 +16,8 @@ def test_env_overrides_file_and_empty_env_is_unset(toml_settings, monkeypatch):
 def test_defaults_without_file_or_env(toml_settings):
     s = toml_settings("")
     assert s.serpapi.monthly_budget == 250 and s.target.enabled is True and s.c1.enabled is False
+
+
+def test_unknown_table_in_file_is_ignored(toml_settings):
+    s = toml_settings('[legacy_source]\napi_key = "stale"\n[target]\nenabled = false\n')
+    assert s.target.enabled is False and not hasattr(s, "legacy_source")

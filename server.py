@@ -21,7 +21,7 @@ import settings as settings_mod
 from auth import tokens
 from c1 import check as c1_check_mod
 from c1 import settings as c1_settings
-from sources import bestbuy, camel, ebay, extract, serpapi, slickdeals, target
+from sources import camel, ebay, extract, serpapi, slickdeals, target
 from sources.budget import serpapi_budget
 from sources.envelope import merge, skipped
 
@@ -32,7 +32,7 @@ mcp = FastMCP(
                   "before spending SerpApi quota."),
 )
 
-RETAILERS = {"ebay": ebay.search, "bestbuy": bestbuy.search, "target": target.search}
+RETAILERS = {"ebay": ebay.search, "target": target.search}
 
 
 def _price_key(item: dict):
@@ -56,7 +56,7 @@ async def _fan_out(query: str, num: int) -> list[dict]:
 
 @mcp.tool
 async def search_products(query: str, num: int = 10) -> dict:
-    """Find candidate products across Google Shopping (SerpApi), eBay, Best Buy, and Target.
+    """Find candidate products across Google Shopping (SerpApi), eBay, and Target.
     data: [{title, price, merchant, url, product_id}] sorted by price ascending."""
     envelopes = [await _guard("serpapi", serpapi.search_products(query, num))] + await _fan_out(query, num)
     return merge(envelopes, sort_key=_price_key)
@@ -110,7 +110,6 @@ async def _status() -> dict:
         "serpapi_remaining": serpapi_budget.remaining,
         "serpapi_spent": serpapi_budget.spent,
         "ebay_token_ok": ebay_ok,
-        "bestbuy_configured": bool(s.bestbuy.api_key),
         "target_enabled": s.target.enabled,
         "c1_enabled": s.c1.enabled,
         "c1_calls_used": c1_check_mod.calls_used(),

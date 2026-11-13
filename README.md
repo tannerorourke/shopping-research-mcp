@@ -10,7 +10,7 @@ Requires [uv](https://docs.astral.sh/uv/) on your PATH; the server runs under `u
 /plugin install shopping-research --marketplace tannerorourke/shopping-research-mcp
 ```
 
-Claude Code prompts for the API keys when the plugin is enabled (SerpApi, eBay client ID and secret, Best Buy); each is optional and a blank one leaves that source registered and reported as `disabled_in_settings`. Edit them later under `/plugin`, Installed, Configure options. The SerpApi monthly budget and the Target toggle are options there too. Anything else from `settings.toml.example` (the C1 cross-check, cache TTL) goes in `settings.toml` inside the plugin's data directory, `~/.claude/plugins/data/<plugin id>/`, where the server also keeps its SerpApi counter and eBay token. `uv run playwright install chromium` inside the installed plugin directory enables the headless-browser fallback.
+Claude Code prompts for the API keys when the plugin is enabled (SerpApi, eBay client ID and secret); each is optional and a blank one leaves that source registered and reported as `disabled_in_settings`. Edit them later under `/plugin`, Installed, Configure options. The SerpApi monthly budget and the Target toggle are options there too. Anything else from `settings.toml.example` (the C1 cross-check, cache TTL) goes in `settings.toml` inside the plugin's data directory, `~/.claude/plugins/data/<plugin id>/`, where the server also keeps its SerpApi counter and eBay token. `uv run playwright install chromium` inside the installed plugin directory enables the headless-browser fallback.
 
 The skill arrives as `/shopping-research:shopping-research`.
 
@@ -35,7 +35,6 @@ Pass condition: `get_status` from a Claude Code session returns `serpapi_remaini
 | --- | --- | --- | --- |
 | SerpApi `google_shopping` / `google_product` | cross-retailer search and per-merchant offers | 250 searches a month | `SERPAPI_KEY` |
 | eBay Browse API | marketplace listings | 5,000 calls a day | `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET` |
-| Best Buy Developer API | products, prices, availability | free key | `BESTBUY_API_KEY` |
 | Target RedSky | price, availability | undocumented public key | none |
 | Shopify `/products/<handle>.json`, schema.org JSON-LD, OpenGraph, Playwright | any product page | none | none |
 | CamelCamelCamel | Amazon price history | polite scrape, one request | none |
@@ -61,4 +60,4 @@ The SerpApi monthly counter and cache persist in `~/.best-price/` (override with
 
 ## Sources and their terms
 
-SerpApi, eBay, Best Buy, and Slickdeals RSS are used through their published interfaces. Target's search endpoint is undocumented and CamelCamelCamel is read as a web page, one request per call and never retried; both sites may refuse automated requests, and the server reports that as `blocked` rather than working around it. The Capital One Shopping cross-check drives a browser extension in your own signed-in profile and is off by default. Use each source within its terms.
+SerpApi, eBay, and Slickdeals RSS are used through their published interfaces. Target's search endpoint is undocumented and CamelCamelCamel is read as a web page, one request per call and never retried; both sites may refuse automated requests, and the server reports that as `blocked` rather than working around it. The Capital One Shopping cross-check drives a browser extension in your own signed-in profile and is off by default. Use each source within its terms.

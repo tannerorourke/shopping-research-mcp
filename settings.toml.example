@@ -9,9 +9,6 @@ cache_ttl_hours = 24
 client_id = ""                  # or EBAY_CLIENT_ID env
 client_secret = ""              # or EBAY_CLIENT_SECRET env
 
-[bestbuy]
-api_key = ""                    # or BESTBUY_API_KEY env
-
 [target]
 enabled = true                  # undocumented RedSky; disable if IP-blocked
 

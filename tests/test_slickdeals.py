@@ -49,10 +49,10 @@ async def test_no_entries_and_blocked(mock_http):
 async def test_live_feed_shape_store_in_description_votes_in_content(mock_http):
     xml = """<?xml version="1.0"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><item>
 <title>Pelican Marine Case for AirPods Pro - $9.99 + FS</title><link>https://slickdeals.net/f/1</link>
-<description>Best Buy has *Pelican Marine Case for $9.99 + Free Shipping*</description>
-<content:encoded><![CDATA[<div>Thumb Score: +3 </div><div>Best Buy has <b>Pelican</b></div>]]></content:encoded>
+<description>Newegg has *Pelican Marine Case for $9.99 + Free Shipping*</description>
+<content:encoded><![CDATA[<div>Thumb Score: +3 </div><div>Newegg has <b>Pelican</b></div>]]></content:encoded>
 </item></channel></rss>"""
     mock_http(lambda r: httpx.Response(200, text=xml))
     out = await slickdeals.get_deals("airpods")
     d = out["data"][0]
-    assert (d["price"], d["store"], d["votes"]) == (9.99, "Best Buy", 3)
+    assert (d["price"], d["store"], d["votes"]) == (9.99, "Newegg", 3)

@@ -30,11 +30,6 @@ class EbaySettings:
 
 
 @dataclass(frozen=True)
-class BestBuySettings:
-    api_key: str = ""
-
-
-@dataclass(frozen=True)
 class TargetSettings:
     enabled: bool = True
 
@@ -56,7 +51,6 @@ class C1Settings:
 class Settings:
     serpapi: SerpApiSettings = field(default_factory=SerpApiSettings)
     ebay: EbaySettings = field(default_factory=EbaySettings)
-    bestbuy: BestBuySettings = field(default_factory=BestBuySettings)
     target: TargetSettings = field(default_factory=TargetSettings)
     c1: C1Settings = field(default_factory=C1Settings)
 
@@ -68,7 +62,6 @@ ENV_OVERRIDES = {
     ("target", "enabled"): "TARGET_ENABLED",
     ("ebay", "client_id"): "EBAY_CLIENT_ID",
     ("ebay", "client_secret"): "EBAY_CLIENT_SECRET",
-    ("bestbuy", "api_key"): "BESTBUY_API_KEY",
     ("c1", "enabled"): "C1_CHECK_ENABLED",
 }
 
