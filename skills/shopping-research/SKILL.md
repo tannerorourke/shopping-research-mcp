@@ -25,7 +25,7 @@ Every tool on the `shopping-research` MCP server returns `{data, sources_checked
 - Price history is Amazon-only. No source exists for Walmart, Target, or direct-to-consumer history. For a non-Amazon product, history is unknown. Never describe it as flat or stable.
 - Coupons are not searched. `c1_check`, when enabled, may return coupon-adjusted prices for finalists; that is the only coupon signal. Never say "no coupons exist".
 - Search coverage is finite: SerpApi Google Shopping, eBay, Target, Shopify stores, and page extraction. A retailer absent from results is unchecked, never more expensive.
-- SerpApi is quota-limited to 250 searches a month. Call `get_status` first when quota matters. Past quota, comparison degrades to the retailer APIs plus `extract_product`.
+- SerpApi is quota-limited to 250 searches a month. Call `get_status` first when quota matters. Past quota, comparison degrades to eBay, Target, and `extract_product`.
 - `c1_check` is optional and off by default. When `sources_skipped` says `disabled_in_settings`, report it as not checked; suggest enabling it only when the user asks about coupons.
 - Deals are US-only (Slickdeals).
 

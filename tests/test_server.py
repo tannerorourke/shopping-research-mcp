@@ -11,16 +11,16 @@ async def test_search_unions_sources_and_isolates_failures(monkeypatch):
     async def ok(query, num):
         return envelope([{"title": "a", "price": 30.0, "merchant": "ebay", "url": "u", "product_id": "1"}], ["ebay"])
     async def cheap(query, num):
-        return envelope([{"title": "a", "price": 20.0, "merchant": "target2", "url": "u", "product_id": "2"}], ["target2"])
+        return envelope([{"title": "a", "price": 20.0, "merchant": "newegg", "url": "u", "product_id": "2"}], ["newegg"])
     async def boom(query, num):
         raise httpx.ReadTimeout("slow")
     monkeypatch.setattr(serpapi, "search_products", lambda q, n: _skip("serpapi"))
     monkeypatch.setitem(server.RETAILERS, "ebay", ok)
-    monkeypatch.setitem(server.RETAILERS, "target2", cheap)
+    monkeypatch.setitem(server.RETAILERS, "newegg", cheap)
     monkeypatch.setitem(server.RETAILERS, "target", boom)
     out = await server.search_products("thing")
-    assert [i["merchant"] for i in out["data"]] == ["target2", "ebay"]
-    assert out["sources_checked"] == ["ebay", "target2"]
+    assert [i["merchant"] for i in out["data"]] == ["newegg", "ebay"]
+    assert out["sources_checked"] == ["ebay", "newegg"]
     assert {s["name"]: s["reason"] for s in out["sources_skipped"]} == {"serpapi": "disabled_in_settings", "target": "timeout"}
 
 

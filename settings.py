@@ -3,9 +3,10 @@ Settings for the server: one settings.toml, loaded at start and on reload_settin
 
 Resolution order per field: a non-empty environment variable, then settings.toml,
 then the dataclass default. An empty env value is unset, so an unfilled plugin
-option never blanks a key the file holds. The file path is $BEST_PRICE_SETTINGS or settings.toml beside
-this module, so the server resolves the same file whatever directory the MCP
-client launches it from. Secrets stay in settings.toml (git-ignored) or the env.
+option never blanks a key the file holds. The file path is $BEST_PRICE_SETTINGS or
+settings.toml beside this module, so the server resolves the same file whatever
+directory the MCP client launches it from. Secrets stay in settings.toml
+(git-ignored) or the env.
 """
 import os
 import pathlib

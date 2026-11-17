@@ -65,7 +65,7 @@ async def search_products(query: str, num: int = 10) -> dict:
 @mcp.tool
 async def compare_prices(product_id: str | None = None, query: str | None = None) -> dict:
     """Per-merchant offers for one product. Pass the SerpApi product_id from search_products,
-    or a query (the retailer APIs are searched by it too). data: [{merchant, price, url}] ascending."""
+    or a query (eBay and Target are searched by it too). data: [{merchant, price, url}] ascending."""
     envelopes = [await _guard("serpapi:google_product", serpapi.compare_prices(product_id, query))]
     if query:
         for env in await _fan_out(query, 5):
