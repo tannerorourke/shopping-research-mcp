@@ -54,10 +54,6 @@ The SerpApi monthly counter and cache persist in `~/.best-price/` (override with
 3. In `chrome://extensions`, open the extension's service worker and read the price-comparison endpoint from its Network tab. Write a unique substring of it into `api_url_filter`.
 4. Set `headless = true` and `reload_settings`. `c1/parsers.py` is written against the common payload shapes; adjust it once if the endpoint's shape differs.
 
-## Tests
-
-`uv run pytest -q`. The suite uses `httpx.MockTransport` and launches no browser.
-
 ## Sources and their terms
 
 SerpApi, eBay, and Slickdeals RSS are used through their published interfaces. Target's search endpoint is undocumented and CamelCamelCamel is read as a web page, one request per call and never retried; both sites may refuse automated requests, and the server reports that as `blocked` rather than working around it. The Capital One Shopping cross-check drives a browser extension in your own signed-in profile and is off by default. Use each source within its terms.
