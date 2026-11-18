@@ -6,8 +6,11 @@ A local MCP server that gives Claude Code live product search, cross-retailer pr
 
 Requires [uv](https://docs.astral.sh/uv/) on your PATH; the server runs under `uv run` and creates its own environment on first start.
 
-```
-/plugin install shopping-research --marketplace tannerorourke/shopping-research-mcp
+Add the `tannerorourke` plugin index once, then install from it:
+
+```bash
+claude plugin marketplace add tannerorourke/plugins
+claude plugin install shopping-research@tannerorourke
 ```
 
 Claude Code prompts for the API keys when the plugin is enabled (SerpApi, eBay client ID and secret); each is optional and a blank one leaves that source registered and reported as `disabled_in_settings`. Edit them later under `/plugin`, Installed, Configure options. The SerpApi monthly budget and the Target toggle are options there too. Anything else from `settings.toml.example` (the C1 cross-check, cache TTL) goes in `settings.toml` inside the plugin's data directory, `~/.claude/plugins/data/<plugin id>/`, where the server also keeps its SerpApi counter and eBay token. `uv run playwright install chromium` inside the installed plugin directory enables price history and the headless-browser fallback.
