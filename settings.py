@@ -2,7 +2,8 @@
 Settings for the server: one settings.toml, loaded at start and on reload_settings().
 
 Resolution order per field: a non-empty environment variable, then settings.toml,
-then the dataclass default. An empty env value is unset, so an unfilled plugin
+then the dataclass default. An empty env value is unset, and so is a '${...}'
+placeholder a host passed through unfilled, so a blank plugin or extension
 option never blanks a key the file holds. The file path is $BEST_PRICE_SETTINGS or
 settings.toml beside this module, so the server resolves the same file whatever
 directory the MCP client launches it from. Secrets stay in settings.toml
@@ -73,6 +74,11 @@ def settings_path() -> pathlib.Path:
     return pathlib.Path(os.environ.get("BEST_PRICE_SETTINGS", ROOT / "settings.toml")).expanduser()
 
 
+def _env(var: str) -> str:
+    value = os.environ.get(var, "")
+    return "" if value.startswith("${") else value
+
+
 def _coerce(value: str, target_type: type):
     if target_type is bool:
         return value.strip().lower() in ("1", "true", "yes")
@@ -90,8 +96,8 @@ def load(path: pathlib.Path | None = None) -> Settings:
         if "retailers" in cfg:
             cfg["retailers"] = tuple(cfg["retailers"])
         for (section, key), var in ENV_OVERRIDES.items():
-            if section == name and os.environ.get(var, "") != "":
-                cfg[key] = _coerce(os.environ[var], next(f.type for f in fields(cls) if f.name == key))
+            if section == name and (value := _env(var)):
+                cfg[key] = _coerce(value, next(f.type for f in fields(cls) if f.name == key))
         sections[name] = cls(**cfg)
     return Settings(**sections)
 

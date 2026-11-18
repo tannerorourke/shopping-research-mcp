@@ -17,6 +17,24 @@ Claude Code prompts for the API keys when the plugin is enabled (SerpApi, eBay c
 
 The skill arrives as `/shopping-research:shopping-research`.
 
+## Install in the Claude Desktop app
+
+The desktop bundle is one file, `shopping-research.mcpb`. It runs the same server on your own machine, and the app's Settings screen takes the keys.
+
+1. Install [uv](https://docs.astral.sh/uv/) and check that `uv --version` answers in a new terminal. The app starts the server with `uv run`, which fetches Python and the dependencies on the first start.
+2. Build the bundle from a clone with `npx @anthropic-ai/mcpb pack . shopping-research.mcpb`. The pack leaves out `settings.toml`, the tests, and the environment.
+3. Double-click the file, or drag it onto Settings, Extensions in the app.
+4. Fill the options the app shows: the SerpApi key, the eBay client ID and secret, the monthly budget, and the Target toggle. Each is optional, and a blank key leaves that source reported as `disabled_in_settings`.
+5. Run `uv run playwright install chromium` once from a clone at the same version. The browser lands in a per-user folder the installed server shares, and it enables `get_price_history` and the headless-browser fallback. Without it, price history reports `blocked`.
+
+The counter, the eBay token, and an optional `settings.toml` for the C1 cross-check and the cache TTL live in `~/.best-price/`, outside the bundle, so an update keeps them.
+
+The bundle carries the server only. Upload `skills/shopping-research/` as a skill in the app to get the workflow and the `Not checked:` report.
+
+Pass condition: `get_status` in a new chat returns `serpapi_configured: true` once the key is entered.
+
+If the install dialog reports a `uv` error about a file in use, look under Settings, Extensions before retrying. The extension can be listed anyway, and its first start finishes building the environment.
+
 ## Run from a clone
 
 1. `uv sync` installs the environment (Python 3.12 or newer).

@@ -1,0 +1,92 @@
+{
+  "manifest_version": "0.4",
+  "name": "shopping-research",
+  "display_name": "Shopping Research",
+  "version": "0.1.0",
+  "description": "Product search, cross-retailer prices, Amazon price history, and community deals over free sources, with self-reported coverage on every call.",
+  "long_description": "A local MCP server for shopping research. It searches Google Shopping through SerpApi and eBay through the Browse API, reads any product page, loads Amazon price history from CamelCamelCamel in a browser window that opens for a moment, and lists Slickdeals community deals. Every answer names the sources it checked and the sources it skipped, so a best price always means the lowest among the sources checked. Each API key is optional; a source without its key is reported as skipped.",
+  "author": {
+    "name": "Tanner O'Rourke",
+    "url": "https://tannerorourke.dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tannerorourke/shopping-research-mcp"
+  },
+  "homepage": "https://github.com/tannerorourke/shopping-research-mcp",
+  "documentation": "https://github.com/tannerorourke/shopping-research-mcp#readme",
+  "support": "https://github.com/tannerorourke/shopping-research-mcp/issues",
+  "server": {
+    "type": "uv",
+    "entry_point": "server.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": ["run", "--directory", "${__dirname}", "server.py"],
+      "env": {
+        "BEST_PRICE_SETTINGS": "${HOME}${/}.best-price${/}settings.toml",
+        "SERPAPI_KEY": "${user_config.serpapi_key}",
+        "SERPAPI_MONTHLY_BUDGET": "${user_config.serpapi_monthly_budget}",
+        "EBAY_CLIENT_ID": "${user_config.ebay_client_id}",
+        "EBAY_CLIENT_SECRET": "${user_config.ebay_client_secret}",
+        "TARGET_ENABLED": "${user_config.target_enabled}"
+      }
+    }
+  },
+  "tools": [
+    { "name": "search_products", "description": "Find candidate products across Google Shopping, eBay, and Target when enabled." },
+    { "name": "compare_prices", "description": "Per-merchant offers for one product." },
+    { "name": "get_condition", "description": "New or second-hand condition of a search result, at no quota." },
+    { "name": "extract_product", "description": "Title, price, currency, and availability from any product page." },
+    { "name": "get_price_history", "description": "Amazon price history from CamelCamelCamel, read in a browser window that opens for a moment." },
+    { "name": "get_deals", "description": "Community-vetted deals from Slickdeals (US)." },
+    { "name": "c1_check", "description": "Optional Capital One Shopping cross-check on one finalist, off by default." },
+    { "name": "get_status", "description": "Which sources are configured and how many SerpApi searches are left this month." },
+    { "name": "reload_settings", "description": "Re-read settings.toml without restarting." }
+  ],
+  "user_config": {
+    "serpapi_key": {
+      "type": "string",
+      "title": "SerpApi API key",
+      "description": "Free key from serpapi.com (250 searches a month). Powers Google Shopping search and per-merchant offers. Leave blank to run without it.",
+      "sensitive": true,
+      "required": false
+    },
+    "serpapi_monthly_budget": {
+      "type": "number",
+      "title": "SerpApi monthly budget",
+      "description": "Hard stop on SerpApi searches per calendar month. The server refuses calls past it.",
+      "default": 250,
+      "min": 0,
+      "required": false
+    },
+    "ebay_client_id": {
+      "type": "string",
+      "title": "eBay client ID",
+      "description": "App ID of a production keyset from developer.ebay.com. Leave blank to skip eBay.",
+      "sensitive": true,
+      "required": false
+    },
+    "ebay_client_secret": {
+      "type": "string",
+      "title": "eBay client secret",
+      "description": "Cert ID of the same keyset; the server fetches and caches its own OAuth token.",
+      "sensitive": true,
+      "required": false
+    },
+    "target_enabled": {
+      "type": "boolean",
+      "title": "Query Target",
+      "description": "Off by default. Target's search endpoint is undocumented and refuses most automated requests; turn on to try it, and a refusal is reported as blocked.",
+      "default": false,
+      "required": false
+    }
+  },
+  "compatibility": {
+    "platforms": ["win32", "darwin", "linux"],
+    "runtimes": {
+      "python": ">=3.12"
+    }
+  },
+  "keywords": ["shopping", "price comparison", "deals", "price history"],
+  "license": "MIT"
+}

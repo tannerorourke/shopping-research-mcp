@@ -1,0 +1,15 @@
+# Left out of the desktop bundle: local secrets, environments, tests, and files only Claude Code reads.
+settings.toml
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+tests/
+extensions/*/
+.claude/
+.claude-plugin/
+.executor/
+.mcp.json
+.mcpbignore
+skills/
+*.mcpb
