@@ -32,7 +32,7 @@ class EbaySettings:
 
 @dataclass(frozen=True)
 class TargetSettings:
-    enabled: bool = True
+    enabled: bool = False
 
 
 @dataclass(frozen=True)

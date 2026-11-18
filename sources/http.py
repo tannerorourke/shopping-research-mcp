@@ -1,8 +1,8 @@
 """
 Shared HTTP helpers: one browser-like client and a single polite GET.
 
-Scraped sources (CamelCamelCamel, Target, product pages) get exactly one request
-per call and no retry loop; a 403 or 503 is reported as 'blocked', never hammered.
+Scraped sources (Target, product pages) get exactly one request per call and
+no retry loop; a 403 or 503 is reported as 'blocked', never hammered.
 """
 import httpx
 
@@ -22,7 +22,7 @@ async def polite_get(url: str, **kwargs) -> httpx.Response:
 
 
 def money(value) -> float | None:
-    """'$1,099.00' or 1099 -> 1099.0; anything unparseable -> None."""
+    # -- '$1,099.00' or 1099 -> 1099.0; anything unparseable -> None
     if value is None:
         return None
     if isinstance(value, (int, float)):
@@ -35,5 +35,5 @@ def money(value) -> float | None:
 
 
 def reason_for(status: int) -> str:
-    """Skip reason for a failed response: 401 is a credential problem, everything else is a block."""
+    # -- 401 is a credential problem, everything else is a block
     return "auth_error" if status == 401 else "blocked"

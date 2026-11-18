@@ -51,8 +51,8 @@
     "target_enabled": {
       "type": "boolean",
       "title": "Query Target",
-      "description": "Target's search endpoint is undocumented and may block automated requests; turn off if it keeps reporting blocked.",
-      "default": true
+      "description": "Off by default. Target's search endpoint is undocumented and refuses most automated requests; turn on to try it, and a refusal is reported as blocked.",
+      "default": false
     }
   }
 }

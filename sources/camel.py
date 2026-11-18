@@ -2,16 +2,17 @@
 CamelCamelCamel: Amazon price history (lowest, highest, average, current).
 
 Gives the "is this a good price" verdict that Google Shopping cannot. Called by
-the price-history tool with an ASIN taken from an Amazon URL.
+the price-history tool with an ASIN taken from an Amazon URL. The site refuses
+plain HTTP clients and headless browsers, so the product page is loaded once in
+a visible Chromium window and never retried.
 """
-# -- page structure written from memory; needs one live confirmation. CCC sits
-# behind Cloudflare, so one request per call and no retry.
 import re
 
-import httpx
 from bs4 import BeautifulSoup
+from playwright.async_api import Error as PlaywrightError
+from playwright.async_api import TimeoutError as PlaywrightTimeout
 
-from . import http
+from . import browser, http
 from .envelope import envelope, skipped
 
 ASIN = re.compile(r"^[A-Z0-9]{10}$")
@@ -28,21 +29,25 @@ def asin_from_url(url_or_asin: str) -> str | None:
 
 
 def parse_ccc(html: str) -> dict | None:
-    found = {}
-    for row in BeautifulSoup(html, "html.parser").find_all("tr"):
-        cells = row.find_all(["td", "th"])
-        if not cells:
+    # -- Amazon's row of the price table, keyed by the first word of each header cell; a dash reads as None
+    for table in BeautifulSoup(html, "html.parser").find_all("table"):
+        rows = [[c.get_text(" ", strip=True) for c in r.find_all(["td", "th"])] for r in table.find_all("tr")]
+        amazon = next((r for r in rows if r and r[0].lower() == "amazon"), None)
+        if amazon is None:
             continue
-        label = cells[0].get_text(strip=True).lower()
-        for name in LABELS:
-            if label.startswith(name) and name not in found:
-                m = DOLLARS.search(" ".join(c.get_text(" ", strip=True) for c in cells[1:]))
-                found[name] = http.money(m.group(0)) if m else None
-    return {name: found.get(name) for name in LABELS} if found else None
+        prices = {}
+        for head, cell in zip(rows[0], amazon):
+            m = DOLLARS.search(cell)
+            prices[head.lower().partition(" ")[0]] = http.money(m.group(0)) if m else None
+        return {name: prices.get(name) for name in LABELS}
+    return None
 
 
-def verdict(hist: dict) -> str:
+def verdict(hist: dict) -> str | None:
     current, lowest, average = hist["current"], hist["lowest"], hist["average"]
+    # -- the tracker can hold a history with no live Amazon price; no verdict without one
+    if current is None:
+        return None
     if current <= lowest * 1.03:
         return "at/near all-time low"
     if current > average * 1.10:
@@ -56,12 +61,15 @@ async def get_price_history(asin: str | None) -> dict:
     if asin is None:
         return skipped("camelcamelcamel", "not_amazon")
     try:
-        r = await http.polite_get(f"https://camelcamelcamel.com/product/{asin}")
-    except httpx.TimeoutException:
+        status, html = await browser.headed_get(f"https://camelcamelcamel.com/product/{asin}")
+    except PlaywrightTimeout:
         return skipped("camelcamelcamel", "timeout")
-    if r.status_code in http.BLOCKED_STATUSES:
+    # -- a machine with no display or no Chromium install lands here as well
+    except PlaywrightError:
         return skipped("camelcamelcamel", "blocked")
-    hist = parse_ccc(r.text)
-    if hist is None or None in hist.values():
+    if status in http.BLOCKED_STATUSES:
+        return skipped("camelcamelcamel", "blocked")
+    hist = parse_ccc(html)
+    if hist is None or hist["lowest"] is None or hist["average"] is None:
         return skipped("camelcamelcamel", "no_results")
     return envelope({**hist, "verdict": verdict(hist)}, checked=["camelcamelcamel"])

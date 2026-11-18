@@ -13,8 +13,9 @@ Every tool on the `shopping-research` MCP server returns `{data, sources_checked
 | --- | --- | --- |
 | `search_products` | `(query, num=10)` | `[{title, price, merchant, url, product_id}]` ascending by price |
 | `compare_prices` | `(product_id \| None, query \| None)` | `[{merchant, price, url}]` ascending |
+| `get_condition` | `(product_id)` | `[{condition, merchant, price, title}]`; `new` or a second-hand label such as `pre-owned` |
 | `extract_product` | `(url)` | `{title, price, currency, availability, merchant}` |
-| `get_price_history` | `(asin \| amazon URL \| None)` | `{lowest, highest, average, current, verdict}` or `None` |
+| `get_price_history` | `(asin \| amazon URL \| None)` | `{lowest, highest, average, current, verdict}` or `None`; `current` and `verdict` can be null |
 | `get_deals` | `(query \| None, category \| None)` | `[{title, price, store, url, votes}]` |
 | `c1_check` | `(url)` | `{c1_best, offers}` or `None`; settings-gated, off by default |
 | `get_status` | `()` | configured sources, SerpApi searches remaining, C1 state |
@@ -23,9 +24,13 @@ Every tool on the `shopping-research` MCP server returns `{data, sources_checked
 ## Known limitations, read on every invocation
 
 - Price history is Amazon-only. No source exists for Walmart, Target, or direct-to-consumer history. For a non-Amazon product, history is unknown. Never describe it as flat or stable.
+- `get_price_history` opens a Chromium window on the user's desktop for about a second. Tell the user once, before the first call in a session.
+- When `current` and `verdict` are null, the tracker holds no live Amazon price. Compare the price you found against `lowest` and `average` yourself, and say that is what you did.
+- Search results mix new and second-hand listings, and a SerpApi item does not say which. `get_condition` answers from the cached search at no quota. An eBay item carries its own `condition`.
 - Coupons are not searched. `c1_check`, when enabled, may return coupon-adjusted prices for finalists; that is the only coupon signal. Never say "no coupons exist".
-- Search coverage is finite: SerpApi Google Shopping, eBay, Target, Shopify stores, and page extraction. A retailer absent from results is unchecked, never more expensive.
-- SerpApi is quota-limited to 250 searches a month. Call `get_status` first when quota matters. Past quota, comparison degrades to eBay, Target, and `extract_product`.
+- Search coverage is finite: SerpApi Google Shopping, eBay, Shopify stores, and page extraction. A retailer absent from results is unchecked, never more expensive.
+- Target is off by default and arrives as `disabled_in_settings` on every search. `get_status` shows `target_enabled`.
+- SerpApi is quota-limited to 250 searches a month. Call `get_status` first when quota matters. Past quota, comparison degrades to eBay and `extract_product`, plus Target when it is enabled.
 - `c1_check` is optional and off by default. When `sources_skipped` says `disabled_in_settings`, report it as not checked; suggest enabling it only when the user asks about coupons.
 - Deals are US-only (Slickdeals).
 
@@ -37,29 +42,31 @@ Step 1, find the product(s): `search_products`, plus `extract_product` for any p
 
 Step 2, compare and suggest, in the shape chosen in Step 0. Recommend an alternative only when there is a clear better option or a tradeoff worth naming, or when the user asks.
 
-Step 3, find deals, after the finalist(s) are chosen unless the user asked for deals up front. Order: `compare_prices`, then `get_price_history` when the finalist has an ASIN or amazon URL, then `get_deals`, then `c1_check` on finalists only when enabled and the retailer is supported. Never run the deal tools across the whole shortlist; quota and rate limits are per call.
+Step 3, find deals, after the finalist(s) are chosen unless the user asked for deals up front. Before quoting a lowest price that came from a SerpApi search item, call `get_condition` with its `product_id`. Order: `compare_prices`, then `get_price_history` when the finalist has an ASIN or amazon URL, then `get_deals`, then `c1_check` on finalists only when enabled and the retailer is supported. Never run the deal tools across the whole shortlist; quota and rate limits are per call.
 
 Step 4, report coverage: union every `sources_checked` and `sources_skipped` from the run and write the `Not checked:` line.
 
 ## Output contract
 
-- Lowest price among sources checked: retailer, price, URL.
+- Lowest price among sources checked: retailer, price, URL. When its condition is anything but `new`, name the condition beside the price and give the lowest `new` price as well.
 - C1 cross-check result only when it beat the above: retailer, price, whether coupon-adjusted.
 - Price-history verdict for Amazon, or "history: not available (non-Amazon)".
 - Community-deal signal when relevant: Slickdeals title and votes.
 - One-sentence buy or wait recommendation.
-- `Not checked:`, mandatory. Map skip reasons to plain text, for example `Not checked: price history (non-Amazon), C1 Shopping (disabled), Target (blocked)`. When nothing was skipped, write `Not checked: none`.
+- `Not checked:`, mandatory. Map skip reasons to plain text, for example `Not checked: price history (non-Amazon), C1 Shopping (disabled), Target (disabled)`. When nothing was skipped, write `Not checked: none`.
 
 ## Skip reasons and what to do
 
 | `sources_skipped` reason | Behavior |
 | --- | --- |
-| SerpApi `quota_exhausted` | Use eBay, Target, and `extract_product` on candidate URLs; note reduced coverage. |
+| SerpApi `quota_exhausted` | Use eBay, `extract_product` on candidate URLs, and Target when enabled; note reduced coverage. |
 | SerpApi `disabled_in_settings` | No API key configured; same fallback, and tell the user once. |
 | eBay `auth_error` | The server already refreshed the token and retried once. Skip eBay and note it. |
 | CamelCamelCamel `blocked` | Current price only; `Not checked: price history (CCC unavailable)`. |
 | `not_amazon` on history | Write "history: not available (non-Amazon)". State it, never infer. |
+| Target `disabled_in_settings` | The default. List under `Not checked:`; suggest enabling it only when the user asks about Target. |
 | Target `blocked` | Drop Target, continue. |
+| `get_condition` `no_results` | The id is not in a search from the last 24 hours, or it is an eBay or Target id. Say the condition is unverified. |
 | `c1_check` `disabled_in_settings` | List under `Not checked:`; do not retry. |
 | `c1_check` `retailer_unsupported` | Skip silently; list under `Not checked:`. |
 | `c1_check` `auth_error` | Tell the user to sign into Capital One Shopping in the tool's Chrome profile; do not retry this run. |

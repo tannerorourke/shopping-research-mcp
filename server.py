@@ -40,7 +40,7 @@ def _price_key(item: dict):
 
 
 async def _guard(name: str, coro):
-    """A source that raises never takes the fan-out down; it is reported as a skip."""
+    # -- a source that raises never takes the fan-out down; it is reported as a skip
     try:
         return await coro
     except httpx.TimeoutException:
@@ -54,18 +54,19 @@ async def _fan_out(query: str, num: int) -> list[dict]:
     return list(await asyncio.gather(*(_guard(n, f(query, num)) for n, f in RETAILERS.items())))
 
 
-@mcp.tool
+@mcp.tool(description=(
+    "Find candidate products across Google Shopping (SerpApi), eBay, and Target when enabled. "
+    "data: [{title, price, merchant, url, product_id}] sorted by price ascending."))
 async def search_products(query: str, num: int = 10) -> dict:
-    """Find candidate products across Google Shopping (SerpApi), eBay, and Target.
-    data: [{title, price, merchant, url, product_id}] sorted by price ascending."""
     envelopes = [await _guard("serpapi", serpapi.search_products(query, num))] + await _fan_out(query, num)
     return merge(envelopes, sort_key=_price_key)
 
 
-@mcp.tool
+@mcp.tool(description=(
+    "Per-merchant offers for one product. Pass the SerpApi product_id from search_products, "
+    "or a query (eBay, and Target when enabled, are searched by it too). "
+    "data: [{merchant, price, url}] ascending."))
 async def compare_prices(product_id: str | None = None, query: str | None = None) -> dict:
-    """Per-merchant offers for one product. Pass the SerpApi product_id from search_products,
-    or a query (eBay and Target are searched by it too). data: [{merchant, price, url}] ascending."""
     envelopes = [await _guard("serpapi:google_product", serpapi.compare_prices(product_id, query))]
     if query:
         for env in await _fan_out(query, 5):
@@ -75,30 +76,41 @@ async def compare_prices(product_id: str | None = None, query: str | None = None
     return merge(envelopes, sort_key=_price_key)
 
 
-@mcp.tool
+@mcp.tool(description=(
+    "Title, price, currency, availability from any product page: Shopify JSON, schema.org JSON-LD, "
+    "OpenGraph, then a headless-browser fallback."))
 async def extract_product(url: str) -> dict:
-    """Title, price, currency, availability from any product page: Shopify JSON, schema.org JSON-LD,
-    OpenGraph, then a headless-browser fallback."""
     return await _guard("page", extract.extract_product(url))
 
 
-@mcp.tool
+@mcp.tool(description=(
+    "Amazon price history from CamelCamelCamel, read in a Chromium window that opens for a moment. "
+    "Accepts an ASIN or an amazon.com product URL. data: {lowest, highest, average, current, verdict}, "
+    "with current and verdict null when the tracker holds no live Amazon price, "
+    "or None with skip reason not_amazon."))
 async def get_price_history(asin: str | None = None) -> dict:
-    """Amazon price history from CamelCamelCamel. Accepts an ASIN or an amazon.com product URL.
-    data: {lowest, highest, average, current, verdict} or None with skip reason not_amazon."""
     return await _guard("camelcamelcamel", camel.get_price_history(camel.asin_from_url(asin) if asin else None))
 
 
-@mcp.tool
+@mcp.tool(description=(
+    "Condition of one search_products result, by its SerpApi product_id: new, or the listing's second-hand "
+    "label such as pre-owned. Read from the cached search, so it costs no quota. "
+    "data: [{condition, merchant, price, title}], one entry per listing sharing the product_id; "
+    "no_results when no search in the cache window returned it."))
+async def get_condition(product_id: str) -> dict:
+    return serpapi.condition_of(product_id)
+
+
+@mcp.tool(description=(
+    "Community-vetted deals from Slickdeals RSS (US). data: [{title, price, store, url, votes}]."))
 async def get_deals(query: str | None = None, category: str | None = None) -> dict:
-    """Community-vetted deals from Slickdeals RSS (US). data: [{title, price, store, url, votes}]."""
     return await _guard("slickdeals", slickdeals.get_deals(query, category))
 
 
-@mcp.tool
+@mcp.tool(description=(
+    "Optional Capital One Shopping cross-check on one finalist URL. Off unless [c1] enabled = true; "
+    "returns sources_skipped disabled_in_settings otherwise. data: {c1_best, offers}."))
 async def c1_check(url: str) -> dict:
-    """Optional Capital One Shopping cross-check on one finalist URL. Off unless [c1] enabled = true;
-    returns sources_skipped disabled_in_settings otherwise. data: {c1_best, offers}."""
     return await _guard("c1_shopping", c1_check_mod.c1_check(url))
 
 
@@ -118,16 +130,16 @@ async def _status() -> dict:
     }
 
 
-@mcp.tool
+@mcp.tool(description=(
+    "Coverage before spending quota: which sources are configured, SerpApi searches left this month, "
+    "whether the C1 cross-check is enabled."))
 async def get_status() -> dict:
-    """Coverage before spending quota: which sources are configured, SerpApi searches left this month,
-    whether the C1 cross-check is enabled."""
     return await _status()
 
 
-@mcp.tool
+@mcp.tool(description=(
+    "Re-read settings.toml without restarting. A running C1 browser is closed if enabled flips to false."))
 async def reload_settings() -> dict:
-    """Re-read settings.toml without restarting. A running C1 browser is closed if enabled flips to false."""
     was_enabled = settings_mod.current().c1.enabled
     settings_mod.reload()
     serpapi_budget.reload()

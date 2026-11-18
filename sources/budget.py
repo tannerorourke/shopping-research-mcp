@@ -62,6 +62,12 @@ class SerpApiBudget:
             return entry["data"]
         return None
 
+    def cache_scan(self, namespace: str):
+        # -- live entries whose key starts with 'namespace', for a lookup that has no key of its own
+        for k, e in self._state["cache"].items():
+            if json.loads(k)[0] == namespace and time.time() - e["at"] < self.ttl:
+                yield e["data"]
+
     def cache_put(self, key, data):
         cache = self._state["cache"]
         cache[self._cache_key(key)] = {"at": time.time(), "data": data}

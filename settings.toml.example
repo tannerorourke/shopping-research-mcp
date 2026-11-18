@@ -10,7 +10,7 @@ client_id = ""                  # or EBAY_CLIENT_ID env
 client_secret = ""              # or EBAY_CLIENT_SECRET env
 
 [target]
-enabled = true                  # undocumented RedSky; disable if IP-blocked
+enabled = false                 # undocumented RedSky, refuses most automated requests; or TARGET_ENABLED env
 
 [c1]
 enabled = false                 # C1_CHECK_ENABLED env overrides ("true"/"false")
