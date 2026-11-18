@@ -1,7 +1,7 @@
 """
 eBay application OAuth (client-credentials grant) with a persisted token.
 
-Endpoint: POST https://api.ebay.com/identity/v1/oauth2/v2/token with HTTP Basic
+Endpoint: POST https://api.ebay.com/identity/v1/oauth2/token with HTTP Basic
 (client_id:client_secret). Called by sources.ebay before each Browse request;
 the token lives ~2h, so it is cached in memory and in STATE_DIR/ebay_token.json
 and refreshed once it is within five minutes of expiry.
@@ -14,7 +14,7 @@ import httpx
 import settings
 from sources import http
 
-TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/v2/token"
+TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token"
 SCOPE = "https://api.ebay.com/oauth/api_scope"
 REFRESH_MARGIN = 300
 
